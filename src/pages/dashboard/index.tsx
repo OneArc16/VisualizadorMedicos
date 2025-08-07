@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import { verificarToken } from '@/utils/verifyToken'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import toast from 'react-hot-toast'
 
 type Medico = {
   C_digo_empleado: string
@@ -47,8 +48,9 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
             : m
         )
       )
+      toast.success('Visibilidad actualizada correctamente')
     } else {
-      alert('Error al cambiar estado del médico')
+      toast.error('Error al cambiar estado del médico')
     }
   }
 

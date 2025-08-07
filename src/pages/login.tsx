@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import toast from 'react-hot-toast'
+
 
 export default function LoginPage() {
   const [codigo_empleado, setCodigoEmpleado] = useState('')
@@ -17,7 +19,8 @@ export default function LoginPage() {
     })
 
     if (res.ok) {
-      router.push('/dashboard')
+      toast.success('¡Bienvenido!')
+      setTimeout(() => router.push('/dashboard'), 1500)
     } else {
       const data = await res.json()
       setError(data.message || 'Error al iniciar sesión')
