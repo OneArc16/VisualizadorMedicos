@@ -22,6 +22,7 @@ export default function LoginPage() {
       toast.success('¡Bienvenido!')
       setTimeout(() => router.push('/dashboard'), 1500)
     } else {
+      toast.error('Credenciales inválidas') 
       const data = await res.json()
       setError(data.message || 'Error al iniciar sesión')
     }
