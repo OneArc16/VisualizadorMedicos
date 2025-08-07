@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verificarToken } from '@/utils/verifyToken'
 
-// Función para extraer el token JWT de las cookies manualmente
 function getTokenFromCookies(req: NextApiRequest): string | null {
   const cookieHeader = req.headers.cookie
   if (!cookieHeader) return null
@@ -17,57 +16,52 @@ function getTokenFromCookies(req: NextApiRequest): string | null {
   return cookies['token'] || null
 }
 
-const prisma = new PrismaClient()
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const token = getTokenFromCookies(req)
-
-  // Validar si hay token
-  if (!token) {
-    return res.status(401).json({ message: 'Token no encontrado' })
-  }
-
-  // Validar si es válido
-  const usuario = verificarToken(token)
-  if (!usuario) {
-    return res.status(401).json({ message: 'Token inválido o expirado' })
+  if (!token || !verificarToken(token)) {
+    return res.status(401).json({ message: 'No autorizado' })
   }
 
   try {
-    // Obtener especialidades (de la tabla especialidad_empleados)
-    const especialidades = await prisma.especialidad_empleados.findMany()
+    const especialidades = await prisma.especialidad_empleados.findMany({
+      where: {
+        bot: 'SI',
+        C_digo_especialidad: { in: ['016', '022'] },
+      },
+    })
 
-    // Construir mapa para agrupar por médico
     const medicosMap: Record<string, {
-      nombre: string
+      C_digo_empleado: string
+      Nombre_empleado: string
       especialidades: string[]
-      bot: boolean
+      bot: string
     }> = {}
 
     for (const esp of especialidades) {
-      const codigoEmpleado = esp.Código_empleado
-      const empleado = await prisma.empleados.findFirst({
-        where: { id: codigoEmpleado }
-      })
-
-      if (!empleado) continue
+      const codigoEmpleado = esp.C_digo_empleado
 
       if (!medicosMap[codigoEmpleado]) {
-        medicosMap[codigoEmpleado] = {
-          nombre: empleado.nombre,
-          especialidades: [],
-          bot: Boolean(esp.bot),
-        }
-      }
+        const empleado = await prisma.empleados.findUnique({
+          where: { C_digo_empleado: codigoEmpleado },
+        })
 
-      medicosMap[codigoEmpleado].especialidades.push(esp.Código_especialidad)
+        if (!empleado) continue
+
+        medicosMap[codigoEmpleado] = {
+          C_digo_empleado: codigoEmpleado,
+          Nombre_empleado: empleado.Nombre_empleado,
+          especialidades: [esp.C_digo_especialidad],
+          bot: esp.bot || 'NO',
+        }
+      } else {
+        medicosMap[codigoEmpleado].especialidades.push(esp.C_digo_especialidad)
+      }
     }
 
-    // Convertir el mapa a array
-    const medicos = Object.entries(medicosMap).map(([codigo_empleado, datos]) => ({
-      codigo_empleado,
-      ...datos
-    }))
+    console.log('Especialidades filtradas:', especialidades)
+    console.log('MedicosMap generado:', medicosMap) 
+
+    const medicos = Object.values(medicosMap)
 
     return res.status(200).json(medicos)
   } catch (error) {

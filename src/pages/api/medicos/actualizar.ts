@@ -1,9 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { PrismaClient } from '@prisma/client'
-import type { especialidad_empleados } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verificarToken } from '@/utils/verifyToken'
 
-// ✅ Extraer token desde las cookies manualmente
+// ✅ Función para extraer el token de cookies
 function getTokenFromCookies(req: NextApiRequest): string | null {
   const cookieHeader = req.headers.cookie
   if (!cookieHeader) return null
@@ -17,8 +16,6 @@ function getTokenFromCookies(req: NextApiRequest): string | null {
 
   return cookies['token'] || null
 }
-
-const prisma = new PrismaClient()
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -37,21 +34,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // ✅ Obtener especialidades del médico con tipo explícito
-    const especialidades: especialidad_empleados[] = await prisma.especialidad_empleados.findMany({
-      where: { Código_empleado: parseInt(codigo_empleado) },
+    const especialidades = await prisma.especialidad_empleados.findMany({
+      where: { C_digo_empleado: codigo_empleado },
     })
 
     if (especialidades.length === 0) {
       return res.status(404).json({ message: 'Empleado no encontrado' })
     }
 
-    // ✅ Alternar el valor del campo bot
-    const nuevoValor = especialidades.some((e) => e.bot === 'si') ? 'no' : 'si'
+    // ✅ Alternar entre 'si' y 'no'
+    const nuevoValor = especialidades.some(e => e.bot === 'si') ? 'no' : 'si'
 
-    // ✅ Actualizar todas las filas del mismo empleado
     await prisma.especialidad_empleados.updateMany({
-      where: { Código_empleado: parseInt(codigo_empleado) },
+      where: { C_digo_empleado: codigo_empleado },
       data: { bot: nuevoValor },
     })
 
