@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '@/lib/prisma'
 import { verificarToken } from '@/utils/verifyToken'
 
-// ✅ Función para extraer el token de cookies
+// Función para extraer el token de las cookies
 function getTokenFromCookies(req: NextApiRequest): string | null {
   const cookieHeader = req.headers.cookie
   if (!cookieHeader) return null
@@ -42,15 +42,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'Empleado no encontrado' })
     }
 
-    // ✅ Alternar entre 'si' y 'no'
-    const nuevoValor = especialidades.some(e => e.bot === 'si') ? 'no' : 'si'
+    // Cambiar entre 'SI' y 'NO' (en mayúsculas)
+    const nuevoValor = especialidades.some(e => e.bot === 'SI') ? 'NO' : 'SI'
 
     await prisma.especialidad_empleados.updateMany({
       where: { C_digo_empleado: codigo_empleado },
       data: { bot: nuevoValor },
     })
 
-    return res.status(200).json({ message: `Bot actualizado a '${nuevoValor}'` })
+    return res.status(200).json({
+      message: `El médico fue ${nuevoValor === 'SI' ? 'activado' : 'desactivado'} correctamente.`,
+      nuevoValor
+    })
   } catch (error) {
     console.error('Error actualizando bot:', error)
     return res.status(500).json({ message: 'Error del servidor' })
