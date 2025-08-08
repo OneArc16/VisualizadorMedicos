@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const especialidades = await prisma.especialidad_empleados.findMany({
       where: {
         bot: { in: ['SI', 'NO'] },
-        C_digo_especialidad: { in: ['016', '022'] },
+        C_digo_especialidad: { in: ['016', '022', '062'] },
       },
     })
 

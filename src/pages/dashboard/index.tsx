@@ -3,6 +3,7 @@ import { verificarToken } from '@/utils/verifyToken'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import toast, { Toaster } from 'react-hot-toast'
+import Swal from 'sweetalert2'
 
 type Medico = {
   C_digo_empleado: string
@@ -35,6 +36,19 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
   }
 
   const toggleBot = async (codigo_empleado: string) => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: '¿Deseas cambiar el estado del bot para este médico?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar',
+    })
+
+    if (!result.isConfirmed) return
+
     const res = await fetch('/api/medicos/actualizar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -56,6 +70,19 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
   }
 
   const cambiarEspecialidad = async (codigo_empleado: string, nuevaEspecialidad: string) => {
+    const result = await Swal.fire({
+      title: '¿Cambiar especialidad?',
+      text: '¿Deseas cambiar la especialidad de este médico?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar',
+    })
+
+    if (!result.isConfirmed) return
+
     const res = await fetch('/api/medicos/cambiarespecialidad', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -89,7 +116,7 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
         </button>
       </div>
 
-      <p className="mb-4">Bienvenido, {nombre}. Aquí puedes ver y modificar las especialidades de los médicos visibles en el bot.</p>
+      <p className="mb-4">Bienvenido, {nombre}. Aquí puedes ver y modificar los médicos visibles en el bot.</p>
 
       <table className="w-full bg-white border rounded">
         <thead>
@@ -172,7 +199,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   return {
     props: {
       nombre: datos.nombre,
-      medicosIniciales: medicos,
+      medicosIniciales: medicos || [],
     },
   }
 }
