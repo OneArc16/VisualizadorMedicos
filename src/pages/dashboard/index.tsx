@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import { verificarToken } from '@/utils/verifyToken'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 
 type Medico = {
   C_digo_empleado: string
@@ -18,11 +18,12 @@ type TokenPayload = {
   exp: number
 }
 
-// ✅ Diccionario para traducir códigos de especialidades
-const NOMBRES_ESPECIALIDADES: Record<string, string> = {
-  '016': 'Medicina General',
-  '022': 'Odontología',
-}
+const opcionesEspecialidades = [
+  { codigo: '016', nombre: 'Medicina General' },
+  { codigo: '022', nombre: 'Odontología' },
+  { codigo: '062', nombre: 'Medicina Laboral' },
+  { codigo: '036', nombre: 'Nutrición' },
+]
 
 export default function Dashboard({ nombre, medicosIniciales }: { nombre: string; medicosIniciales: Medico[] }) {
   const [medicos, setMedicos] = useState<Medico[]>(medicosIniciales)
@@ -48,14 +49,36 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
             : m
         )
       )
-      toast.success('Visibilidad actualizada correctamente')
+      toast.success('Estado del bot actualizado', { position: 'top-center' })
     } else {
-      toast.error('Error al cambiar estado del médico')
+      toast.error('Error al actualizar estado del médico', { position: 'top-center' })
+    }
+  }
+
+  const cambiarEspecialidad = async (codigo_empleado: string, nuevaEspecialidad: string) => {
+    const res = await fetch('/api/medicos/cambiarespecialidad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo_empleado, nueva_especialidad: nuevaEspecialidad }),
+    })
+
+    if (res.ok) {
+      setMedicos((prev) =>
+        prev.map((m) =>
+          m.C_digo_empleado === codigo_empleado
+            ? { ...m, especialidades: [nuevaEspecialidad] }
+            : m
+        )
+      )
+      toast.success('Especialidad actualizada', { position: 'top-center' })
+    } else {
+      toast.error('Error al cambiar especialidad', { position: 'top-center' })
     }
   }
 
   return (
-    <div className="max-w-4xl p-6 mx-auto">
+    <div className="max-w-5xl p-6 mx-auto">
+      <Toaster />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <button
@@ -66,15 +89,15 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
         </button>
       </div>
 
-      <p className="mb-4">Bienvenido, {nombre}. Aquí verás los médicos activos en el bot.</p>
+      <p className="mb-4">Bienvenido, {nombre}. Aquí puedes ver y modificar las especialidades de los médicos visibles en el bot.</p>
 
       <table className="w-full bg-white border rounded">
         <thead>
           <tr className="text-left bg-gray-100">
             <th className="p-2 border">Nombre</th>
-            <th className="p-2 border">Especialidades</th>
+            <th className="p-2 border">Especialidad</th>
             <th className="p-2 border">Bot</th>
-            <th className="p-2 border">Acción</th>
+            <th className="p-2 border">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -82,9 +105,17 @@ export default function Dashboard({ nombre, medicosIniciales }: { nombre: string
             <tr key={medico.C_digo_empleado}>
               <td className="p-2 border">{medico.Nombre_empleado}</td>
               <td className="p-2 border">
-                {medico.especialidades
-                  .map((cod) => NOMBRES_ESPECIALIDADES[cod] || cod)
-                  .join(', ')}
+                <select
+                  value={medico.especialidades[0]}
+                  onChange={(e) => cambiarEspecialidad(medico.C_digo_empleado, e.target.value)}
+                  className="px-2 py-1 border rounded"
+                >
+                  {opcionesEspecialidades.map((esp) => (
+                    <option key={esp.codigo} value={esp.codigo}>
+                      {esp.nombre}
+                    </option>
+                  ))}
+                </select>
               </td>
               <td className="p-2 border">
                 <span className={medico.bot === 'SI' ? 'text-green-600' : 'text-gray-500'}>
@@ -135,12 +166,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const res = await fetch(`${baseUrl}/api/medicos/medicos`, {
     headers: { Cookie: `token=${token}` },
   })
-
-  if (!res.ok) {
-    return {
-      props: { nombre: datos.nombre, medicosIniciales: [] },
-    }
-  }
 
   const medicos = await res.json()
 
