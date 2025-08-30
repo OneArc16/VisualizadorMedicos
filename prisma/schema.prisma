@@ -26,6 +26,7 @@ model especialidad_empleados {
   hi_t                String?   @db.VarChar(5)
   IdSede              Int?
   bot                 String?   @db.VarChar(45)
+  contrato            String?   @db.VarChar(45)
 
   @@id([C_digo_empleado, C_digo_especialidad, IdCentro])
 }
@@ -58,4 +59,17 @@ model empleados {
   Documento       String?  @db.VarChar(18)
 
   @@index([C_digo_empleado], map: "Código_empleado")
+}
+
+model tventidades {
+  Codigo        String   @id @db.VarChar(6)
+  NombreEntidad String?  @db.VarChar(255)
+  Departamento  String?  @db.VarChar(2)
+  Municipio     String?  @db.VarChar(5)
+  Digitado      Boolean?
+  Nit           String   @db.VarChar(9)
+  Dv            String   @db.VarChar(1)
+  email         String   @db.VarChar(80)
+  telefono      String   @db.VarChar(10)
+  Direccion     String   @db.VarChar(50)
 }
