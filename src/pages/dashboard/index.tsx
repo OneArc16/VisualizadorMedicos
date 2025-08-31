@@ -330,3 +330,5 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     },
   }
 }
+
+// PROPIEDAD DANIEL CASTAÑO NAVARRo
