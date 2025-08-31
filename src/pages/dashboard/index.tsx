@@ -75,7 +75,7 @@ export default function Dashboard({
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, cambiar',
+      confirmButtonText: 'Sí',
       cancelButtonText: 'Cancelar',
       showClass: { popup: 'animate__animated animate__fadeInDown' },
       hideClass: { popup: 'animate__animated animate__fadeOutUp' },
@@ -233,8 +233,8 @@ export default function Dashboard({
       <table className="w-full bg-white border rounded">
         <thead>
           <tr className="bg-gray-100">
-            <th className="p-2 text-left border">Nombre</th>
-            <th className="p-2 text-left border">Especialidad</th>
+            <th className="p-2 text-center border">Nombre</th>
+            <th className="p-2 text-center border">Especialidad</th>
             <th className="p-2 text-center border">Bot</th>
             <th className="p-2 text-center border">Acciones</th>
             <th className="p-2 text-center border">Contrato</th>
